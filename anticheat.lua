@@ -1,8 +1,6 @@
 
 
-ESX = nil
-TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-
+--This Thread checks if a player is using spectator mode every 7 seconds and bans them if they are.
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(7000)
@@ -12,7 +10,8 @@ Citizen.CreateThread(function()
     end
 end)
 
-local blockedModels = { -- change this list and add the cars you want.
+-- This is a table of cars that are not allowed
+local blockedModels = { 
         "zentorno",
         "turismor",
         "CARGOBOB",
@@ -109,9 +108,9 @@ local blockedModels = { -- change this list and add the cars you want.
         "frogger"
     }
 
-    --need to figure out a way to whitelist plate for some qa planes etc
 
-local blockedProps = { -- change this list and add the props you want.
+-- This is a table is for props models that are not allowed.
+local blockedProps = { 
     "stt_prop_track_stop_sign",
     "prop_windmill_01",
     "p_spinning_anus_s",
@@ -129,7 +128,6 @@ local blockedProps = { -- change this list and add the props you want.
     "csx_seabed_rock3_",
     "db_apart_03_",
     "db_apart_09_",
-
     "prop_abat_slide",
     "prop_fireescape_02b",
     "prop_air_cargoloader_01",
@@ -640,15 +638,17 @@ local blockedProps = { -- change this list and add the props you want.
     "stt_prop_ramp_spiral_l"
 }
 
-
+--Initialise the table of blacklisted objects/props
 local BlacklistedObjects = {}
 
+--This for loop converts the blockedprops table into their hashkey values and stores it into BlacklistObjects table with a true value.
 for i = 1, #blockedProps do
     local modelName = GetHashKey(blockedProps[i])
     BlacklistedObjects[modelName] = true
 end
 
--- ##Delete blacklisted props##
+--This thread and while loop check every object in the game every 5 seconds
+--if an object matches an object from the BlacklistedObjects table it is deleted
 Citizen.CreateThread(function()
     while true do 
         Wait(5000)
@@ -664,7 +664,8 @@ Citizen.CreateThread(function()
     end
 end)
 
-local blockedPeds = { -- change this list and add the peds you want
+--This table is for blacklisted Ped models.
+local blockedPeds = {
     "a_m_o_acult_01",
     --"a_c_killerwhale", 
     --"a_c_sharktiger", 
@@ -707,7 +708,8 @@ local blockedPeds = { -- change this list and add the peds you want
     "s_f_y_hooker_01",
 }
 
-local blockedWeapons = { -- change this list and add the weapons you want
+--This table is for blacklisted weapon models.
+local blockedWeapons = {
     --"WEAPON_MICROSMG",
     "WEAPON_MINISMG",
     --"WEAPON_SMG",
@@ -798,8 +800,12 @@ local blockedWeapons = { -- change this list and add the weapons you want
     --"WEAPON_POOLCUE",
     --"WEAPON_PIPEWRENCH"
 }
+
+--initialise flag on the client side
  local foundblacklisted = false
--- black listed weapons check
+
+--This Thread checks the weapon a player has and if it finds a blacklisted weapon model, they are banned.
+--If no weapon is found the wait is increased to 8s to reduce client strain.
 Citizen.CreateThread(function()
     while true do
         foundblacklisted = false
@@ -817,6 +823,8 @@ Citizen.CreateThread(function()
     end
 end)
 
+
+--Old unused list of modelhashes.
 local modelHashes = { -- add prop hex here
         0x34315488,
         0x6A27FEB1, 0xCB2ACC8,
@@ -840,66 +848,57 @@ local modelHashes = { -- add prop hex here
         0xF75A749A
 }
 
+
+--This Thread repeats every 10s setting default values to players like ammo, god mode, running speed etc.
 Citizen.CreateThread(function()
-
     while true do
-
         Citizen.Wait(10000)
-
         SetPedInfiniteAmmoClip(PlayerPedId(), false, GetSelectedPedWeapon(PlayerPedId()))
-
         SetEntityInvincible(PlayerPedId(), false)
-
         SetEntityCanBeDamaged(PlayerPedId(), true)
-
         local fallin = IsPedFalling(PlayerPedId())
-
         local ragg = IsPedRagdoll(PlayerPedId())
-
         local parac = GetPedParachuteState(PlayerPedId())
-
         if parac >= 0 or ragg or fallin then
-
             SetEntityMaxSpeed(PlayerPedId(), 80.0)
-
         else
-
             SetEntityMaxSpeed(PlayerPedId(), 7.1)
-
         end
-
     end
-
 end)
 
+--This thread sets the clients weapon damage modifer flag every frame.
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(5)
-        SetWeaponDamageModifier(539292904, 0.0) -- isis explode
+        SetWeaponDamageModifier(539292904, 0.0) -- explode
         SetWeaponDamageModifier(-842959696, 0.0) -- vdm?
         SetWeaponDamageModifier(133987706, 0.0)
         SetWeaponDamageModifier(3452007600, 0.0)
         SetWeaponDamageModifier(3750660587, 0.0)
         SetWeaponDamageModifier(-544306709, 0.0)
-        --SetAiWeaponDamageModifier(0.0) -- probably why money truck is so easy
+        --SetAiWeaponDamageModifier(0.0)
         SetWeaponDamageModifier(507170720, 0.0) -- tank
         SetWeaponDamageModifier(-1312131151,0.0)
         SetWeaponDamageModifier(-1660422300,0.0)
-
         SetWeaponDamageModifier(GetHashKey("WEAPON_FIRE"),0.0)
     end
 end)
 
-
+--Initialise the table of blacklisted vehicle models.
 local BLModels = {}
 
+--This for loop converts the blockedModels table into their hashkey values and stores it into blockedModels table with a true value.
 for i = 1, #blockedModels do
     local modelN = GetHashKey(blockedModels[i])
     BLModels[modelN] = true
 end
 
+--Variable to change the loop speed
 local vehdelete = 1500
 
+--This thread checks the variable modderdetected for a true value which is triggered if a blacklisted vehicle model is detected.
+--If detected the loop speed is reduced to 100ms to delete any vehicle that is spam spawned.
 Citizen.CreateThread(function()
     local sleep
     while true do
@@ -916,6 +915,7 @@ Citizen.CreateThread(function()
     end
 end)
 
+--This thread cleans up any blownup vehicles.
 Citizen.CreateThread(function()
     while true do
         for veh in EnumerateVehicles() do
@@ -934,6 +934,7 @@ Citizen.CreateThread(function()
     end
 end)
 
+--This checks if you are an admin and then the blacklisted vehicle model loop is not ran on your machine.
 whitelistVEHICLE = false
 RegisterNetEvent('blacklist:whitelistVEHICLE')
 AddEventHandler('blacklist:whitelistVEHICLE', function()
@@ -945,7 +946,8 @@ AddEventHandler('blacklist:whitelistVEHICLE', function()
     end)
 end)
 
--- ##Delete blacklisted vehicles##
+--This Thread checks the vehicles in the game, if it finds a blacklisted vehicle model it will flag modderdetected and delete the entitys.
+--If no vehicles are found then the wait is increased to 10s to reduce client strain.
 Citizen.CreateThread(function()
     while true do
         if not whitelistVEHICLE then
@@ -964,45 +966,7 @@ Citizen.CreateThread(function()
     end
 end)
 
---[[
-Citizen.CreateThread(function()
-    while true do
-        for veh in EnumerateVehicles() do
-            local model = GetEntityModel(veh)           
-            for _,car in pairs(blockedModels) do
-                vh = GetVehicleClass(theveh)
-                if GetHashKey(car) == model then          
-                    --if model == GetHashKey("maverick") or model == GetHashKey("luxor") then
-                        --if GetPedInVehicleSeat(veh, -1) == 0 then
-
-                            --print(GetPedInVehicleSeat(veh, -1),print("found"))
-                            --SetEntityAsMissionEntity(veh, true, true)
-                            --DeleteVehicle(veh)
-
-                        --end
-                    --else
-                        --TriggerServerEvent('prp-admin:blacklist')
-                        SetEntityAsMissionEntity(veh)
-                        DeleteVehicle(veh)
-
-                    --end
-                    --if GetPedInVehicleSeat(veh, -1) == PlayerPedId() then
-                        --add server kick here
-                    --end
-                    --SetEntityAsMissionEntity(veh, true, true)
-                    --DeleteVehicle(veh)                    
-                end
-                if vh == 10 or vh == 11 or vh == 14 or vh == 15 or vh == 16 or vh == 17 or vh == 18 or vh == 19 or vh == 20 or vh == 21 then
-                    SetEntityAsMissionEntity(veh)
-                    DeleteVehicle(veh)
-                end
-            end
-        end
-        Citizen.Wait(600)
-    end
-end)
-]]
-
+--Base fivem function to get all entities in the world.
 local entityEnumerator = {
   __gc = function(enum)
     if enum.destructor and enum.handle then
@@ -1051,28 +1015,7 @@ function EnumeratePickups()
   return EnumerateEntities(FindFirstPickup, FindNextPickup, EndFindPickup)
 end
 
---[[
--- ##Delete blacklisted props##
-Citizen.CreateThread(function()
-    while true do 
-        local prop1
-        local ped1
-        for prop in EnumerateObjects() do
-            prop1 = GetEntityModel(prop)
-            for _,blockedprop in pairs(blockedProps) do
-                local prop2 = GetHashKey(blockedprop)
-                if prop1 == prop2 then
-                    SetEntityAsMissionEntity(prop, false, false)
-                    DeleteEntity(prop)
-                end
-            end
-        end
-        
-        Citizen.Wait(6000)
-    end
-end)
-]]--
-
+--Whitelisted ped model table.
 local Whitelistedpeds = {
     "s_m_m_security_01",
     "s_m_y_dealer_01",
@@ -1083,6 +1026,8 @@ local Whitelistedpeds = {
     "u_m_m_partytarget",
     "s_m_y_pilot_01"
 }
+
+
 
 local WhitelistedPedsTable = {}
 
@@ -1102,7 +1047,8 @@ AddEventHandler('blacklist:whitelistPED', function(model)
     end)
 end)
 
--- ##Delete blacklisted Peds##
+--This thread checks every NPCs model in the world.
+--If a blockedped is found then it is deleted
 Citizen.CreateThread(function()
     while true do 
         Wait(6000)
@@ -1138,29 +1084,7 @@ Citizen.CreateThread(function()
     end
 end)
 
---[[
-Citizen.CreateThread(function()
-    local fly
-    while true do
-        for flying in EnumerateVehicles() do
-            if GetEntityHealth(flying) <= 100 then
-                fly = GetVehicleClass(flying)
-                if fly == 16 or fly == 15 or fly == 19 or fly == 21 or fly == 14 then
-                    --if GetPedInVehicleSeat(theveh, -1) == 0 then
-                        SetEntityAsMissionEntity(flying)
-                        DeleteEntity(flying)
-                    --end
-                end
-            end
-        end
-        fly = nil
-        flying = nil
-        Citizen.Wait(2000)
-    end
-end)
-]]
-
---clean up cars after 20 minutes (blown up ones and broken down)
+--This thread cleans up cars if they are blownup or broken down every 20min.
 Citizen.CreateThread(function()
     local vh
     while true do
